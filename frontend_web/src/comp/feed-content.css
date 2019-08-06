@@ -1,0 +1,17 @@
+.feed-box {
+  background-color: #fff;
+  border-radius: 5pt;
+  width: 400px; /*320pt;*/
+  overflow:hidden;
+  padding-top: 15pt;
+  padding-left: 5vh;
+  /*border: 1px solid rgb(131, 131, 131);*/
+  font-color: gray;
+  font-size: 2vh;
+  /*for some things to be left vs right aligned */
+  margin-right: 50px;
+  float: left;
+  height: 30vh; /* 168pt; */
+  margin-top: 20px;
+  position:relative;
+}

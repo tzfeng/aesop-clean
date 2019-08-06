@@ -1,0 +1,58 @@
+:root { 
+  --primaryColor: rgb(183, 75, 107);
+  --secColor: rgb(221, 151, 102);
+  --terColor: rgb(4, 44, 92);
+  --grey: rgb(119, 134, 158);
+  --lightGrey: rgb(228, 228, 228);
+  --blueGrey: rgb(223, 231, 245);
+  --xLen: 500px;
+}
+
+* {
+  outline: none;
+}
+
+body {
+  font-family: Avenir-Roman, Helvetica;
+}
+
+h1 {
+  font-family: Avenir-Heavy;
+  color: var(--terColor);
+  font-size: 25px;
+  text-align: center;
+  padding: 1.5vh;
+}
+
+h2 {
+  font-size: 40px;
+  /*letter-spacing: 5px;*/
+}
+
+h4 {
+  font-size: 11pt;
+  letter-spacing: auto;
+}
+
+input {
+  width: 50%;
+  /*padding: 6px 10px;
+  margin: 8px 0;*/
+  box-sizing: border-box;
+  font-size: 10pt;
+  outline: none;
+}
+
+.def-box {
+  display: inline-block;
+}
+
+.float-left-exch {
+  float: left;
+  margin-left: 90px;
+}
+
+.float-right-exch {
+  text-align:right;
+  margin-right: 100px;
+}

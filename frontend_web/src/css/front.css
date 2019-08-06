@@ -1,0 +1,37 @@
+.front-body {
+	light-height: 1.5vh;
+	position: fixed;
+	top: 0vh;
+	color: white;
+	width: var(--xLen);
+	height: 100vh;
+	text-align: center;	
+	background: linear-gradient(to bottom, white, var(--secColor), var(--primaryColor));
+}
+
+/*.fox {
+	width: 100vw;
+	height: 100vh;
+	background-color: transparent;
+	background-image: url(../icons/aesopMascot.png);
+	background-repeat: no-repeat;
+	background-position: center top;
+}*/
+
+.front-body h2 {
+	font-family: Avenir-Heavy;
+	color: white;
+	font-size: 50px;
+}
+
+.front-body h3 {
+	font-weight: light;
+	color: white;
+	font-size: 22.5px;
+}
+
+a:link, a:visited, a:hover, a:active {
+  color: white;
+  text-transform: none !important;
+  text-decoration: none !important;
+}

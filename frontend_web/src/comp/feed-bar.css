@@ -1,0 +1,24 @@
+.feed-outer-bar {
+	width: 325px;
+	height: 20px;
+	background-color: var(--secColor);
+	margin-right: 10px;
+    float: left;
+    overflow:hidden;
+}
+
+.feed-left-bar {
+	display: inline-block;
+	float: left;
+    /*margin-right: 5px;*/
+	height: 20px;
+	background-color: var(--primaryColor);
+}
+
+.feed-right-bar {
+	display: inline-block;
+	margin-right: 1px;
+	height: 20px;
+	background-color: black;/*var(--secColor);*/
+	border: 5px solid black;
+}

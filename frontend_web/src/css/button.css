@@ -1,0 +1,133 @@
+input:focus{
+    outline: none;   
+}
+
+button:focus { outline: none; }
+
+.container {
+  align-content: center;
+}
+
+* {
+  outline: none;
+}
+
+.main-button, .main-button:visited, .main-button:hover, .main-button:active, .main-button:focus {
+  font: 15px Avenir-Roman;
+  width: auto;
+  min-width: 120px;
+  height: 8vh;
+  font-weight:bold;
+  border-radius: 50px;
+  outline:0 !important; 
+  background-color: #ffffff;
+  color: var(--primaryColor);
+  border: 1px solid var(--primaryColor);
+}
+
+.sec-button, .sec-button:visited, .sec-button:hover, .sec-button:active, .sec-button:focus {
+  font: 15px Avenir-Roman;
+  width: auto;
+  min-width: 120px;
+  height: 8vh;
+  font-weight:bold;
+  border-radius: 50px;
+}
+
+/*.main-button, .main-button:visited {
+  font: 15px Avenir-Roman;
+  width: auto;
+  min-width: 120px;
+  height: 8vh;
+  font-weight:bold;
+  border-radius: 50px;
+  background-color: #ffffff;
+  color: var(--primaryColor);
+  border: 1px solid var(--primaryColor);
+}*/
+
+/*.main-button: hover, .main-button: active {
+  background: linear-gradient(to right, var(--secColor), var(--primaryColor));
+  border: none;
+  color: white;
+}*/
+
+/*.main-button:focus {
+  font: 15px Avenir-Roman;
+  width: auto;
+  min-width: 120px;
+  height: 8vh;
+  font-weight:bold;
+  border-radius: 50px;
+  background-color: #ffffff;
+  color: var(--primaryColor);
+  border: 1px solid var(--primaryColor);
+  outline:0 !important; 
+}*/
+
+
+.sec-button, .sec-button:visited, .sec-button:hover, .sec-button:active, .sec-button:focus {
+  background: linear-gradient(to right, var(--secColor), var(--primaryColor));
+  border: none;
+  color: white;
+}
+
+.white-button {
+  background: white;
+  color: black;
+  width: 175px;
+  padding: 20px;
+}
+
+/*.white-button: hover, .white-button: active {
+  background-color: #ffffff;
+  color: var(--primaryColor);
+  border: 1px solid var(--primaryColor);
+}*/
+
+.back-button, .back-button:visited, .back-button:hover, .back-button:active, .back-button:focus {
+  background-color: transparent; 
+  border: none;
+  color: black;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 40px;
+  outline: none;
+}
+
+.back-button:hover {
+  font-color: #555555;
+  font-weight:bold;
+  outline: none;
+}
+
+/* bet */
+.field-bar, .field-bar-large {
+  width: 100px;
+  text-align: center;
+  height: 30px;
+  border: none;
+  background-color: transparent;
+}
+
+.field-bar {
+  border-bottom: 1px solid var(--lightGrey);
+}
+
+.field-bar-large {
+  content-align: center;
+  width: 200px;
+  height: 90px;
+  font-size: 75px;
+}
+
+.coin {
+  background-image: url('../icons/largeCoinIcon.png');
+  background-position: left center; 
+  background-repeat: no-repeat;
+}
+
+.centered {
+  text-align: center;
+}

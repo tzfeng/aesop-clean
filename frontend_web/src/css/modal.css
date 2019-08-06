@@ -1,0 +1,12 @@
+.modal {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.display-block {
+  display: block;
+}
+
+.display-none {
+  display: none;
+}

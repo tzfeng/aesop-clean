@@ -1,0 +1,78 @@
+ul {
+list-style-type: none;
+}
+
+.rep-box {
+  border-radius: 25px;
+  background-color: white;
+  padding: 20px;
+  margin-left: 50px;
+  margin-right: 50px;
+  width: 400px;
+  height: 43vh;
+}
+
+.rep-box-wrapper {
+  margin-top: 25vh;
+}
+
+/*my reputation*/
+.rep-box h6 {
+  color: var(--grey);
+  font: Avenir-Heavy;
+  font-size: 3vh;
+}
+
+/*token count*/
+.rep-box h2 {
+  color: var(--terColor);
+  font-size: 7vh;
+}
+
+.feed-container {
+  position: relative;
+  display:flex; 
+  flex-direction:column;
+  margin-top: 0vh;
+}
+
+/*active insights*/
+.feed-container h5 {
+  font-family: Avenir-Heavy;
+  font-size:4vh;
+  color: var(--terColor);
+  text-transform: none;
+  text-align: left;
+  margin-left: 50px;
+}
+
+.feed-white {
+  padding: 0vh;
+  /*background-color: white;*/
+  width: var(--xLen);
+  /*height: 2000px;*/
+  margin-top: 20px;
+  color: black;
+  display: block;
+  overflow: auto;
+}
+
+.bg-rect-prim {
+  background-color: var(--primaryColor);
+  height: 50vh;
+  width: var(--xLen);
+  position: absolute;
+  top: 0vh;
+  border-bottom-right-radius: 100px;
+}
+
+.corner-circle {
+  position: absolute;
+    top: -30vh;
+    right: -150px;
+    width: 300px;
+    height: 60vh;
+  border-bottom-left-radius: 250px;
+  background-color: white;
+  opacity: 0.34;
+}

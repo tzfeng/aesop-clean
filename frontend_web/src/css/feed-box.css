@@ -1,0 +1,137 @@
+.feed-box, .feed-box-after {
+  color: black;
+  background-color: #fff;
+  border-radius: 5pt;
+  width: 400px; /*320pt;*/
+  overflow:hidden;
+  padding-top: 15pt;
+  padding-left: 5vh;
+  /*border: 1px solid rgb(131, 131, 131);*/
+  font-color: gray;
+  font-size: 2vh;
+  /*for some things to be left vs right aligned */
+  margin-right: 50px;
+  /*margin-left: 50px;*/
+  /*float: left;*/
+}
+
+.feed-box {
+  height: 30vh; /* 168pt; */
+  margin-top: 20px;
+  position:relative;
+}
+
+.feed-box-after {
+  height: auto;
+  position: relative;
+  margin-top: 3vh;
+  margin-left: 50px;
+}
+
+/*fb up by x */
+.feed-box h2, .feed-box-after h2 {
+  font-size:3vh;
+  letter-spacing: 0px;
+  font-family: Avenir-Heavy;
+  text-align: left;
+  color: black;
+  /*margin-left: 38pt;*/
+}
+
+.main-line {
+  font-size:3vh;
+  letter-spacing: 0px;
+  font-family: Avenir-Heavy;
+  text-align: left;
+  color: black;
+}
+
+/*volume */
+.feed-box h3, .feed-box-after h3 {
+  font-size:2vh;
+  font-family: Avenir-Medium;
+  text-align: left;
+  color: black;
+  text-transform: none;
+  width: 95px;
+  background: #ffffff url(../icons/coin.png) 100% 100% no-repeat;
+  background-position: right top;
+  /*margin-left: 38pt;*/
+}
+/*
+.feed-box h4, .feed-box-after h4 {
+  font-family: OpenSans-Bold;
+  text-align: left;
+  font-color: #000000;
+  font-size:18pt;
+}*/
+
+/*by market close*/
+.feed-box h6, .feed-box-after h6 {
+  height:10vh;
+  padding: 2vh;
+  width: 325px;
+  border-top: 0.2vh solid rgb(239, 239, 239);
+  text-align: center;
+  color: var(--lightGrey);
+  font-size:20px;
+}
+
+.feed-box button, .create-bet-button {
+  background-color: transparent;
+  font-color: white;
+  text-transform: uppercase;
+}
+
+.feed-for-left {
+  font-family: Avenir-Roman;
+  float: left;
+  margin-right: 0px;
+  color: black;
+}
+
+.feed-for-right {
+  font-family: Avenir-Roman;
+  text-align:right;
+  margin-right: 40px;
+  color: black;
+}
+
+.volume-bubble-left, .volume-bubble-right {
+  width: 150px;
+/*  background-color: var(--blueGrey);
+*/  padding: 10px;
+  color: black;
+  border: none;
+  border-radius: 20px;
+  text-align: center;
+  font-size: 15px;
+  background: var(--blueGrey) url(../icons/coin.png) 100% 100% no-repeat;
+  background-position: 20% 70%;
+
+}
+
+.volume-bubble-left {
+  float: left;
+  margin-left: 0vw;
+}
+
+.volume-bubble-right {
+  margin-left: 175px;
+}
+
+.details-header {
+  height: 13vh;
+  /*background-color: var(--lightGrey);*/
+}
+
+/*insight details*/
+.details-header h1 {
+  margin-top: 0vh;
+}
+
+.details-header h3 {
+  margin-left: 60px;
+  color: var(--grey);
+  font-size: 35px;
+}

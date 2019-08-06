@@ -1,0 +1,9 @@
+.feed-for-left {
+  float: left;
+  margin-right: 0px;
+}
+
+.feed-for-right {
+  text-align:right;
+  margin-right: 40px;
+}
