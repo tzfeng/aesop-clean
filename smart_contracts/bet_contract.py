@@ -428,7 +428,7 @@ def create_user(address, username, bio):
         # add username to list of existing usernames
         usernames.append(username)
         un_info = Serialize(usernames)
-        Put(ctx, UNKEY, usernames)
+        Put(ctx, UNKEY, un_info)
 
         # create profile info list
         profile = []
