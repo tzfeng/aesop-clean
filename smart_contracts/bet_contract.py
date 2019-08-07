@@ -322,7 +322,6 @@ def subtract_ong(address, amount):
 # add to address's wallet
 def add_bank(address, amount):
     byte_address = Base58ToAddress(address)
-    assert (CheckWitness(byte_address))
 
     if len(byte_address) != 20:
         Notify(['Invalid address'])
@@ -352,7 +351,6 @@ def add_bank(address, amount):
 # subtract from address's wallet
 def subtract_bank(address, amount):
     byte_address = Base58ToAddress(address)
-    assert (CheckWitness(byte_address))
 
     if len(byte_address) != 20:
         Notify(['Invalid address'])
