@@ -1044,172 +1044,172 @@ def distribute(bet, result):
         Notify(['There are no active bets'])
         return False
 
-    # check if bet argument is an active bet
-    if bet not in active_bets:
-        Notify(['Bet is not active'])
-        return False
+    # # check if bet argument is an active bet
+    # if bet not in active_bets:
+    #     Notify(['Bet is not active'])
+    #     return False
 
-    else:
-        # FR, AR, FS, AS, FC, AC, UD, MA, TP, SE
-        val_info = Get(ctx, concatkey(bet, VAL_PREFIX))
-        val_list = Deserialize(val_info)
 
-        # case in which bet is a draw
-        if result == 0:
-            Notify(['The bet was a draw'])
-            # if this is an active bet, the bank map exists
-            bank_info = Get(ctx, BANKEY)
-            bank_map = Deserialize(bank_info)
+    # FR, AR, FS, AS, FC, AC, UD, MA, TP, SE
+    val_info = Get(ctx, concatkey(bet, VAL_PREFIX))
+    val_list = Deserialize(val_info)
 
-            # if this is an active bet, the for map and list must exist
-            fm_info = Get(ctx, concatkey(bet, FM_PREFIX))
-            for_map = Deserialize(fm_info)
-
-            fl_info = Get(ctx, concatkey(bet, FL_PREFIX))
-            for_list = Deserialize(fl_info)
-
-            am_info = Get(ctx, concatkey(bet, AM_PREFIX))
-            against_map = Deserialize(am_info)
-
-            al_info = Get(ctx, concatkey(bet, AL_PREFIX))
-            against_list = Deserialize(al_info)
-
-            # return money to for voters
-            for address in for_list:
-                bank_map[address] += for_map[address]
-                add_bank(address, for_map[address])
-
-                # update participants' track record
-                record_info = Get(ctx, concatkey(address, RC_PREFIX))
-                record_map = Deserialize(record_info)
-                # 0 means bet is a draw
-                record_map[concatkey(bet, BT_PREFIX)] = 0
-                record_info = Serialize(record_map)
-                Put(ctx, concatkey(address, RC_PREFIX), record_info)
-
-            # return money to against voters
-            for address in against_list:
-                bank_map[address] += against_map[address]
-                add_bank(address, against_map[address])
-
-                # update participants' track record
-                record_info = Get(ctx, concatkey(address, RC_PREFIX))
-                record_map = Deserialize(record_info)
-                # 0 means bet is a draw
-                record_map[concatkey(bet, BT_PREFIX)] = 0
-                record_info = Serialize(record_map)
-                Put(ctx, concatkey(address, RC_PREFIX), record_info)
-
-            # profit for both for and against voters stays 0 for case of a draw
-
-            Notify(['Money has been returned to voters, bank_map and wallet updated'])
-
-            # store bank map
-            bank_info = Serialize(bank_map)
-            Put(ctx, BANKEY, bank_info)
-
-            Notify(['Data structures removed, bet incomplete', bet])
-
-            return False
-
-        # check result and set data structures accordingly
-        # if this is an active bet, these maps and lists should all exist.
-        # payout function will first check if there are stakes on both sides of the bet before distributing
-        elif result > 0:
-            wm_info = Get(ctx, concatkey(bet, FM_PREFIX))
-            winners_map = Deserialize(wm_info)
-
-            wl_info = Get(ctx, concatkey(bet, FL_PREFIX))
-            winners_list = Deserialize(wl_info)
-
-            lm_info = Get(ctx, concatkey(bet, AM_PREFIX))
-            losers_map = Deserialize(lm_info)
-
-            ll_info = Get(ctx, concatkey(bet, AL_PREFIX))
-            losers_list = Deserialize(ll_info)
-
-            win_stake = val_list[2]
-            lose_stake = val_list[3]
-            Notify(['for_map = winners'])
-        else:
-            wm_info = Get(ctx, concatkey(bet, AM_PREFIX))
-            winners_map = Deserialize(wm_info)
-
-            wl_info = Get(ctx, concatkey(bet, AL_PREFIX))
-            winners_list = Deserialize(wl_info)
-
-            lm_info = Get(ctx, concatkey(bet, FM_PREFIX))
-            losers_map = Deserialize(lm_info)
-
-            ll_info = Get(ctx, concatkey(bet, FL_PREFIX))
-            losers_list = Deserialize(ll_info)
-
-            win_stake = val_list[3]
-            lose_stake = val_list[2]
-            Notify(['against_map = winners'])
-
-        # get rep and bank info for updating
-        rep_info = Get(ctx, REPKEY)
-        rep_map = Deserialize(rep_info)
-
+    # case in which bet is a draw
+    if result == 0:
+        Notify(['The bet was a draw'])
+        # if this is an active bet, the bank map exists
         bank_info = Get(ctx, BANKEY)
         bank_map = Deserialize(bank_info)
 
-        for address in winners_list:
-            # distribute and update winners' rep, bank, wallet
-            winnings = winners_map[address] + winners_map[address] * lose_stake / win_stake
-            rep_map[address] += winners_map[address] * lose_stake / win_stake
-            bank_map[address] += winnings
-            add_bank(address, winnings)
+        # if this is an active bet, the for map and list must exist
+        fm_info = Get(ctx, concatkey(bet, FM_PREFIX))
+        for_map = Deserialize(fm_info)
 
-            # update winners' track record. already initialized in vote/create
+        fl_info = Get(ctx, concatkey(bet, FL_PREFIX))
+        for_list = Deserialize(fl_info)
+
+        am_info = Get(ctx, concatkey(bet, AM_PREFIX))
+        against_map = Deserialize(am_info)
+
+        al_info = Get(ctx, concatkey(bet, AL_PREFIX))
+        against_list = Deserialize(al_info)
+
+        # return money to for voters
+        for address in for_list:
+            bank_map[address] += for_map[address]
+            add_bank(address, for_map[address])
+
+            # update participants' track record
             record_info = Get(ctx, concatkey(address, RC_PREFIX))
             record_map = Deserialize(record_info)
-            # 2 means bet is a victory
-            record_map[concatkey(bet, BT_PREFIX)] = 2
+            # 0 means bet is a draw
+            record_map[concatkey(bet, BT_PREFIX)] = 0
             record_info = Serialize(record_map)
             Put(ctx, concatkey(address, RC_PREFIX), record_info)
 
-            # update participants' profit per bet
-            profit_info = Get(ctx, concatkey(address, PT_PREFIX))
-            profit_map = Deserialize(profit_info)
-            # winners have positive profit proportional to their stake and total loser stake
-            profit_map[concatkey(bet, BT_PREFIX)] += winners_map[address] * lose_stake / win_stake
-            profit_info = Serialize(profit_map)
-            Put(ctx, concatkey(address, PT_PREFIX), profit_info)
+        # return money to against voters
+        for address in against_list:
+            bank_map[address] += against_map[address]
+            add_bank(address, against_map[address])
 
-        Notify(['Winner rep, bank, wallet, and record updated'])
-
-        # only need to update losers' rep - bank and wallet updated already during staking
-        for address in losers_list:
-            rep_map[address] -= losers_map[address]
-
-            # update losers' track record
+            # update participants' track record
             record_info = Get(ctx, concatkey(address, RC_PREFIX))
             record_map = Deserialize(record_info)
-            # -1 means bet is a loss
-            record_map[concatkey(bet, BT_PREFIX)] = -1
+            # 0 means bet is a draw
+            record_map[concatkey(bet, BT_PREFIX)] = 0
             record_info = Serialize(record_map)
             Put(ctx, concatkey(address, RC_PREFIX), record_info)
 
-            # update participants' profit per bet
-            profit_info = Get(ctx, concatkey(address, PT_PREFIX))
-            profit_map = Deserialize(profit_info)
-            # losers have net loss equal to their stake
-            profit_map[concatkey(bet, BT_PREFIX)] -= losers_map[address]
-            profit_info = Serialize(profit_map)
-            Put(ctx, concatkey(address, PT_PREFIX), profit_info)
+        # profit for both for and against voters stays 0 for case of a draw
 
-        Notify(['Loser rep updated'])
+        Notify(['Money has been returned to voters, bank_map and wallet updated'])
 
-        # put public data structures back onchain
-        rep_info = Serialize(rep_map)
-        Put(ctx, REPKEY, rep_info)
-
+        # store bank map
         bank_info = Serialize(bank_map)
         Put(ctx, BANKEY, bank_info)
 
-        return True
+        Notify(['Data structures removed, bet incomplete', bet])
+
+        return False
+
+    # check result and set data structures accordingly
+    # if this is an active bet, these maps and lists should all exist.
+    # payout function will first check if there are stakes on both sides of the bet before distributing
+    elif result > 0:
+        wm_info = Get(ctx, concatkey(bet, FM_PREFIX))
+        winners_map = Deserialize(wm_info)
+
+        wl_info = Get(ctx, concatkey(bet, FL_PREFIX))
+        winners_list = Deserialize(wl_info)
+
+        lm_info = Get(ctx, concatkey(bet, AM_PREFIX))
+        losers_map = Deserialize(lm_info)
+
+        ll_info = Get(ctx, concatkey(bet, AL_PREFIX))
+        losers_list = Deserialize(ll_info)
+
+        win_stake = val_list[2]
+        lose_stake = val_list[3]
+        Notify(['for_map = winners'])
+    else:
+        wm_info = Get(ctx, concatkey(bet, AM_PREFIX))
+        winners_map = Deserialize(wm_info)
+
+        wl_info = Get(ctx, concatkey(bet, AL_PREFIX))
+        winners_list = Deserialize(wl_info)
+
+        lm_info = Get(ctx, concatkey(bet, FM_PREFIX))
+        losers_map = Deserialize(lm_info)
+
+        ll_info = Get(ctx, concatkey(bet, FL_PREFIX))
+        losers_list = Deserialize(ll_info)
+
+        win_stake = val_list[3]
+        lose_stake = val_list[2]
+        Notify(['against_map = winners'])
+
+    # get rep and bank info for updating
+    rep_info = Get(ctx, REPKEY)
+    rep_map = Deserialize(rep_info)
+
+    bank_info = Get(ctx, BANKEY)
+    bank_map = Deserialize(bank_info)
+
+    for address in winners_list:
+        # distribute and update winners' rep, bank, wallet
+        winnings = winners_map[address] + winners_map[address] * lose_stake / win_stake
+        rep_map[address] += winners_map[address] * lose_stake / win_stake
+        bank_map[address] += winnings
+        add_bank(address, winnings)
+
+        # update winners' track record. already initialized in vote/create
+        record_info = Get(ctx, concatkey(address, RC_PREFIX))
+        record_map = Deserialize(record_info)
+        # 2 means bet is a victory
+        record_map[concatkey(bet, BT_PREFIX)] = 2
+        record_info = Serialize(record_map)
+        Put(ctx, concatkey(address, RC_PREFIX), record_info)
+
+        # update participants' profit per bet
+        profit_info = Get(ctx, concatkey(address, PT_PREFIX))
+        profit_map = Deserialize(profit_info)
+        # winners have positive profit proportional to their stake and total loser stake
+        profit_map[concatkey(bet, BT_PREFIX)] += winners_map[address] * lose_stake / win_stake
+        profit_info = Serialize(profit_map)
+        Put(ctx, concatkey(address, PT_PREFIX), profit_info)
+
+    Notify(['Winner rep, bank, wallet, and record updated'])
+
+    # only need to update losers' rep - bank and wallet updated already during staking
+    for address in losers_list:
+        rep_map[address] -= losers_map[address]
+
+        # update losers' track record
+        record_info = Get(ctx, concatkey(address, RC_PREFIX))
+        record_map = Deserialize(record_info)
+        # -1 means bet is a loss
+        record_map[concatkey(bet, BT_PREFIX)] = -1
+        record_info = Serialize(record_map)
+        Put(ctx, concatkey(address, RC_PREFIX), record_info)
+
+        # update participants' profit per bet
+        profit_info = Get(ctx, concatkey(address, PT_PREFIX))
+        profit_map = Deserialize(profit_info)
+        # losers have net loss equal to their stake
+        profit_map[concatkey(bet, BT_PREFIX)] -= losers_map[address]
+        profit_info = Serialize(profit_map)
+        Put(ctx, concatkey(address, PT_PREFIX), profit_info)
+
+    Notify(['Loser rep updated'])
+
+    # put public data structures back onchain
+    rep_info = Serialize(rep_map)
+    Put(ctx, REPKEY, rep_info)
+
+    bank_info = Serialize(bank_map)
+    Put(ctx, BANKEY, bank_info)
+
+    return True
 
 
 # checks the result of the bet's prediction
@@ -1222,47 +1222,47 @@ def check_result(bet, current_price):
         Notify(['There are no active bets'])
         return False
 
-    # check if bet argument is an active bet
-    if bet not in active_bets:
-        Notify(['Bet is not active'])
-        return False
+    # # check if bet argument is an active bet
+    # if bet not in active_bets:
+    #     Notify(['Bet is not active'])
+    #     return False
 
-    else:
-        val_info = Get(ctx, concatkey(bet, VAL_PREFIX))
-        val_list = Deserialize(val_info)
 
-        sign = val_list[6]
-        target_price = val_list[8]
+    val_info = Get(ctx, concatkey(bet, VAL_PREFIX))
+    val_list = Deserialize(val_info)
 
-        # get the margin of the bet
-        val_info = Get(ctx, concatkey(bet, VAL_PREFIX))
-        val_list = Deserialize(val_info)
-        margin = val_list[7]
+    sign = val_list[6]
+    target_price = val_list[8]
 
-        if margin == 0:
-            if current_price == target_price:
-                Notify(['No price change'])
-                return 0
+    # get the margin of the bet
+    val_info = Get(ctx, concatkey(bet, VAL_PREFIX))
+    val_list = Deserialize(val_info)
+    margin = val_list[7]
 
-        # case where user bets that stock will rise
-        if sign > 0:
-            if current_price >= target_price:
-                Notify(['For side correctly predicted rise'])
-                return 1
-            else:
-                Notify(['Against side correctly predicted fall'])
-                return -1
-        # case where user bets that stock will fall
-        if sign < 0:
-            if current_price <= target_price:
-                Notify(['For side correctly predicted fall'])
-                return 1
-            else:
-                Notify(['Against side correctly predicted rise'])
-                return -1
+    if margin == 0:
+        if current_price == target_price:
+            Notify(['No price change'])
+            return 0
+
+    # case where user bets that stock will rise
+    if sign > 0:
+        if current_price >= target_price:
+            Notify(['For side correctly predicted rise'])
+            return 1
         else:
-            Notify(['Stock was not predicted to make any movement'])
-            return False
+            Notify(['Against side correctly predicted fall'])
+            return -1
+    # case where user bets that stock will fall
+    if sign < 0:
+        if current_price <= target_price:
+            Notify(['For side correctly predicted fall'])
+            return 1
+        else:
+            Notify(['Against side correctly predicted rise'])
+            return -1
+    else:
+        Notify(['Stock was not predicted to make any movement'])
+        return False
 
 
 # carries out distribute function given the current price, uses check_result
@@ -1275,10 +1275,10 @@ def payout(bet, current_price):
         Notify(['There are no active bets'])
         return False
 
-    # check if bet argument is an active bet
-    if bet not in active_bets:
-        Notify(['Bet is not active'])
-        return False
+    # # check if bet argument is an active bet
+    # if bet not in active_bets:
+    #     Notify(['Bet is not active'])
+    #     return False
 
     am_info = Get(ctx, concatkey(bet, AM_PREFIX))
     if am_info:
@@ -1338,8 +1338,6 @@ def payout(bet, current_price):
         return False
 
 
-# need timed payout
-
 # displays all the necessary info for UI for a single bet
 def bet_info(bet):
     # check if active bet list is populated/exists
@@ -1350,36 +1348,36 @@ def bet_info(bet):
         Notify(['There are no active bets'])
         return False
 
-    # check if bet argument is an active bet
-    if bet not in active_bets:
-        Notify(['Bet is not active'])
-        return False
+    # # check if bet argument is an active bet
+    # if bet not in active_bets:
+    #     Notify(['Bet is not active'])
+    #     return False
 
     # since this is an active bet, all of the below data structures are populated
-    else:
-        # FR, AR, FS, AS, FC, AC, UD, MA, TP, SE
-        val_info = Get(ctx, concatkey(bet, VAL_PREFIX))
-        val_list = Deserialize(val_info)
 
-        # retrieve values of interest for this bet from val_list
-        for_rep = val_list[0]
-        against_rep = val_list[1]
-        for_staked = val_list[2]
-        against_staked = val_list[3]
-        for_count = val_list[4]
-        against_count = val_list[5]
-        sign = val_list[6]
-        margin = val_list[7]
-        target_price = val_list[8]
-        date = val_list[9]
-        stock_ticker = val_list[10]
-        for_avg_rep = val_list[11]
-        against_avg_rep = val_list[12]
-        prob = val_list[13]
+    # FR, AR, FS, AS, FC, AC, UD, MA, TP, SE
+    val_info = Get(ctx, concatkey(bet, VAL_PREFIX))
+    val_list = Deserialize(val_info)
 
-        Notify(['bet_info', bet, stock_ticker, target_price, sign, margin,
-                for_rep, against_rep, for_avg_rep, against_avg_rep, for_staked, against_staked, date, prob])
-        return True
+    # retrieve values of interest for this bet from val_list
+    for_rep = val_list[0]
+    against_rep = val_list[1]
+    for_staked = val_list[2]
+    against_staked = val_list[3]
+    for_count = val_list[4]
+    against_count = val_list[5]
+    sign = val_list[6]
+    margin = val_list[7]
+    target_price = val_list[8]
+    date = val_list[9]
+    stock_ticker = val_list[10]
+    for_avg_rep = val_list[11]
+    against_avg_rep = val_list[12]
+    prob = val_list[13]
+
+    Notify(['bet_info', bet, stock_ticker, target_price, sign, margin,
+            for_rep, against_rep, for_avg_rep, against_avg_rep, for_staked, against_staked, date, prob])
+    return True
 
 
 # returns addresses of all registered users
