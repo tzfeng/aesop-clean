@@ -1,8 +1,7 @@
-from boa.builtins import concat, ToScriptHash
-from boa.interop.System.Action import RegisterAction
-from boa.interop.System.Runtime import Notify, CheckWitness
 from boa.interop.System.Storage import GetContext, Get, Put, Delete
-
+from boa.interop.System.Runtime import Notify, CheckWitness
+from boa.interop.System.Action import RegisterAction
+from boa.builtins import concat, ToScriptHash
 # from boa.interop.Ontology.Runtime import AddressToBase58, Base58ToAddress
 
 TransferEvent = RegisterAction("transfer", "from", "to", "amount")
@@ -10,11 +9,11 @@ ApprovalEvent = RegisterAction("approval", "owner", "spender", "amount")
 
 ctx = GetContext()
 
-NAME = 'Reputation'
-SYMBOL = 'REP'
+NAME = 'Aesop'
+SYMBOL = 'AES'
 DECIMALS = 8
 FACTOR = 100000000
-OWNER = ToScriptHash("ANXE3XovCwBH1ckQnPc6vKYiTwRXyrVToD")
+OWNER = ToScriptHash("AabYzjuPMm42KTcWtZQ9qMZ3bc2Mxp2EQW")
 # OWNER = bytearray(b'\x61\x6f\x2a\x4a\x38\x39\x6f\xf2\x03\xea\x01\xe6\xc0\x70\xae\x42\x1b\xb8\xce\x2d')
 TOTAL_AMOUNT = 1000000000
 BALANCE_PREFIX = bytearray(b'\x01')
@@ -51,7 +50,7 @@ def Main(operation, args):
             from_acct = args[0]
             to_acct = args[1]
             amount = args[2]
-            return transfer(from_acct, to_acct, amount)
+            return transfer(from_acct,to_acct,amount)
     if operation == 'transferMulti':
         return transferMulti(args)
     if operation == 'transferFrom':
@@ -61,22 +60,21 @@ def Main(operation, args):
         from_acct = args[1]
         to_acct = args[2]
         amount = args[3]
-        return transferFrom(spender, from_acct, to_acct, amount)
+        return transferFrom(spender,from_acct,to_acct,amount)
     if operation == 'approve':
         if len(args) != 3:
             return False
-        owner = args[0]
+        owner  = args[0]
         spender = args[1]
         amount = args[2]
-        return approve(owner, spender, amount)
+        return approve(owner,spender,amount)
     if operation == 'allowance':
         if len(args) != 2:
             return False
         owner = args[0]
         spender = args[1]
-        return allowance(owner, spender)
+        return allowance(owner,spender)
     return False
-
 
 def init():
     """
@@ -86,13 +84,13 @@ def init():
     if len(OWNER) != 20:
         Notify(["Owner illegal!"])
         return False
-    if Get(ctx, SUPPLY_KEY):
+    if Get(ctx,SUPPLY_KEY):
         Notify("Already initialized!")
         return False
     else:
         total = TOTAL_AMOUNT * FACTOR
-        Put(ctx, SUPPLY_KEY, total)
-        Put(ctx, concat(BALANCE_PREFIX, OWNER), total)
+        Put(ctx,SUPPLY_KEY,total)
+        Put(ctx,concat(BALANCE_PREFIX,OWNER),total)
 
         # Notify(["transfer", "", Base58ToAddress(OWNER), total])
         # ownerBase58 = AddressToBase58(OWNER)
@@ -136,10 +134,10 @@ def balanceOf(account):
     """
     if len(account) != 20:
         raise Exception("address length error")
-    return Get(ctx, concat(BALANCE_PREFIX, account))
+    return Get(ctx,concat(BALANCE_PREFIX,account))
 
 
-def transfer(from_acct, to_acct, amount):
+def transfer(from_acct,to_acct,amount):
     """
     Transfer amount of tokens from from_acct to to_acct
     :param from_acct: the account from which the amount of tokens will be transferred
@@ -152,23 +150,24 @@ def transfer(from_acct, to_acct, amount):
     if CheckWitness(from_acct) == False or amount < 0:
         return False
 
-    fromKey = concat(BALANCE_PREFIX, from_acct)
-    fromBalance = Get(ctx, fromKey)
+    fromKey = concat(BALANCE_PREFIX,from_acct)
+    fromBalance = Get(ctx,fromKey)
     if amount > fromBalance:
         return False
     if amount == fromBalance:
-        Delete(ctx, fromKey)
+        Delete(ctx,fromKey)
     else:
-        Put(ctx, fromKey, fromBalance - amount)
+        Put(ctx,fromKey,fromBalance - amount)
 
-    toKey = concat(BALANCE_PREFIX, to_acct)
-    toBalance = Get(ctx, toKey)
-    Put(ctx, toKey, toBalance + amount)
+    toKey = concat(BALANCE_PREFIX,to_acct)
+    toBalance = Get(ctx,toKey)
+    Put(ctx,toKey,toBalance + amount)
 
     # Notify(["transfer", AddressToBase58(from_acct), AddressToBase58(to_acct), amount])
     # TransferEvent(AddressToBase58(from_acct), AddressToBase58(to_acct), amount)
+    Notify(['Transfer successful', from_acct, to_acct, amount])
     TransferEvent(from_acct, to_acct, amount)
-
+    
     return True
 
 
@@ -187,7 +186,7 @@ def transferMulti(args):
     return True
 
 
-def approve(owner, spender, amount):
+def approve(owner,spender,amount):
     """
     owner allow spender to spend amount of token from owner account
     Note here, the amount should be less than the balance of owner right now.
@@ -203,7 +202,7 @@ def approve(owner, spender, amount):
     if amount > balanceOf(owner) or amount < 0:
         return False
 
-    key = concat(concat(APPROVE_PREFIX, owner), spender)
+    key = concat(concat(APPROVE_PREFIX,owner),spender)
     Put(ctx, key, amount)
 
     # Notify(["approval", AddressToBase58(owner), AddressToBase58(spender), amount])
@@ -213,7 +212,7 @@ def approve(owner, spender, amount):
     return True
 
 
-def transferFrom(spender, from_acct, to_acct, amount):
+def transferFrom(spender,from_acct,to_acct,amount):
     """
     spender spends amount of tokens on the behalf of from_acct, spender makes a transaction of amount of tokens
     from from_acct to to_acct
@@ -233,17 +232,17 @@ def transferFrom(spender, from_acct, to_acct, amount):
     if amount > fromBalance or amount < 0:
         return False
 
-    approveKey = concat(concat(APPROVE_PREFIX, from_acct), spender)
-    approvedAmount = Get(ctx, approveKey)
-    toKey = concat(BALANCE_PREFIX, to_acct)
+    approveKey = concat(concat(APPROVE_PREFIX,from_acct),spender)
+    approvedAmount = Get(ctx,approveKey)
+    toKey = concat(BALANCE_PREFIX,to_acct)
 
     if amount > approvedAmount:
         return False
     elif amount == approvedAmount:
-        Delete(ctx, approveKey)
+        Delete(ctx,approveKey)
         Put(ctx, fromKey, fromBalance - amount)
     else:
-        Put(ctx, approveKey, approvedAmount - amount)
+        Put(ctx,approveKey,approvedAmount - amount)
         Put(ctx, fromKey, fromBalance - amount)
 
     toBalance = Get(ctx, toKey)
@@ -256,12 +255,12 @@ def transferFrom(spender, from_acct, to_acct, amount):
     return True
 
 
-def allowance(owner, spender):
+def allowance(owner,spender):
     """
     check how many token the spender is allowed to spend from owner account
     :param owner: token owner
     :param spender:  token spender
     :return: the allowed amount of tokens
     """
-    key = concat(concat(APPROVE_PREFIX, owner), spender)
-    return Get(ctx, key)
+    key = concat(concat(APPROVE_PREFIX,owner),spender)
+    return Get(ctx,key)
