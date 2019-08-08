@@ -9,7 +9,6 @@ from ontology.interop.System.Storage import Put, Get, GetContext, Delete
 
 # keys and prefixes for data storage onchain
 REPKEY = 'Rep'  # public reputation of all users
-BANKEY = 'Bank'  # bank balances of all users
 BETKEY = 'Bets'  # the current bet key
 USERKEY = 'Users'  # list of all users
 AESKEY = 'AES'  # AES supply key
@@ -36,8 +35,8 @@ contract_address = GetExecutingScriptHash()
 contract_address_ONG = bytearray(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02')
 
 # call OEP4 contract for transfer of tokens
-RepContract = RegisterAppCall('7f0ac00575b34c1f8a4fd4641f6c58721f668fd4', 'operation', 'args')
-token_owner = 'ANXE3XovCwBH1ckQnPc6vKYiTwRXyrVToD'
+AesContract = RegisterAppCall('245a51f433e1acbc319c88d3fcd3019d070635ca', 'operation', 'args')
+token_owner = 'AabYzjuPMm42KTcWtZQ9qMZ3bc2Mxp2EQW'
 
 
 def Main(operation, args):
@@ -77,12 +76,6 @@ def Main(operation, args):
             return False
         address = args[0]
         return view_rep(address)
-
-    if operation == 'view_bank':
-        if len(args) != 1:
-            return False
-        address = args[0]
-        return view_bank(address)
 
     if operation == 'view_wallet':
         if len(args) != 1:
@@ -173,14 +166,12 @@ def init():
         Put(ctx, BETKEY, BETID)
         Notify(['BETID inited'])
 
-        aes_amount = 10000 * AES_FACTOR
+        aes_amount = 500000000 * AES_FACTOR
         subtract_bank(token_owner, aes_amount)
-        Put(ctx, AESKEY, aes_amount)
         Notify(['AES transferred to contract'])
 
-        ong_amount = 1000 * ONG_FACTOR
+        ong_amount = 10000 * ONG_FACTOR
         subtract_ong(token_owner, ong_amount)
-        Put(ctx, ONGKEY, ong_amount)
         Notify(['ONG transferred to contract'])
 
         Notify(['Successfully inited'])
@@ -310,7 +301,11 @@ def subtract_ong(address, amount):
         to_acct = contract_address
 
         supply = Get(ctx, ONGKEY)
-        supply += amount
+        if supply:
+            supply += amount
+        else:
+            supply = amount
+            
         Put(ctx, ONGKEY, supply)
         Notify(['ONG supply increased by', amount])
 
@@ -345,7 +340,7 @@ def add_bank(address, amount):
         Notify(['AES supply decreased by', amount])
 
         params = [from_acct, to_acct, amount]
-        return RepContract('transfer', params)
+        return AesContract('transfer', params)
 
 
 # subtract from address's wallet
@@ -360,7 +355,7 @@ def subtract_bank(address, amount):
         Notify(['Negative amount'])
         return False
 
-    if RepContract('balanceOf', [byte_address]) < amount:
+    if AesContract('balanceOf', [byte_address]) < amount:
         Notify(['Not enough AES in wallet'])
         return False
 
@@ -369,12 +364,16 @@ def subtract_bank(address, amount):
         to_acct = contract_address
 
         supply = Get(ctx, AESKEY)
-        supply += amount
+        if supply:
+            supply += amount
+        else:
+            supply = amount
+            
         Put(ctx, AESKEY, supply)
         Notify(['AES supply increased by', amount])
 
         params = [from_acct, to_acct, amount]
-        return RepContract('transfer', params)
+        return AesContract('transfer', params)
 
 
 def aes_supply():
@@ -454,19 +453,6 @@ def create_user(address, username, bio):
         Put(ctx, USERKEY, user_info)
         Notify(['all_users updated'])
 
-        # check if bank map has been created. if not, initialize it
-        bank_info = Get(ctx, BANKEY)
-        if bank_info:
-            bank_map = Deserialize(bank_info)
-        else:
-            bank_map = {}
-
-        # update and put bank map
-        bank_map[address] = 100 * AES_FACTOR
-        bank_info = Serialize(bank_map)
-        Put(ctx, BANKEY, bank_info)
-        Notify(['bank_map updated'])
-
         # add to wallet of user
         add_bank(address, 100 * AES_FACTOR)
         Notify(['user wallet updated'])
@@ -474,7 +460,7 @@ def create_user(address, username, bio):
         return True
 
 
-# allow an existing user to purchase more rep, only modified bank_map and actual wallet
+# allow an existing user to purchase more rep, only modified actual wallet
 def purchase_bank(address, amount):
     byte_address = Base58ToAddress(address)
     assert (CheckWitness(byte_address))
@@ -506,15 +492,8 @@ def purchase_bank(address, amount):
         Notify(['not a registered user'])
         return False
 
-    # if the user has been created, that means the bank map exists. update the user's bank and wallet
+    # update the user's wallet
     else:
-        bank_info = Get(ctx, BANKEY)
-        bank_map = Deserialize(bank_info)
-        bank_map[address] += amount
-        bank_info = Serialize(bank_map)
-        Put(ctx, BANKEY, bank_info)
-        Notify(['bank_map updated'])
-
         add_bank(address, amount)
         Notify(['AES added to wallet'])
 
@@ -538,7 +517,7 @@ def redeem_bank(address, amount):
         Notify(['Not enough ONG in supply'])
         return False
 
-    if RepContract('balanceOf', [byte_address]) < amount:
+    if AesContract('balanceOf', [byte_address]) < amount:
         Notify(['Not enough AES in wallet'])
         return False
 
@@ -555,15 +534,8 @@ def redeem_bank(address, amount):
         Notify(['not a registered user'])
         return False
 
-    # if the user has been created, that means the bank map exists. update the user's bank and wallet
+    # update the user's wallet
     else:
-        bank_info = Get(ctx, BANKEY)
-        bank_map = Deserialize(bank_info)
-        bank_map[address] -= amount
-        bank_info = Serialize(bank_map)
-        Put(ctx, BANKEY, bank_info)
-        Notify(['bank_map updated'])
-
         add_ong(address, amount * 10)
         Notify(['ONG added to wallet'])
 
@@ -603,35 +575,6 @@ def view_rep(address):
         return rep_balance
 
 
-def view_bank(address):
-    byte_address = Base58ToAddress(address)
-
-    if len(byte_address) != 20:
-        Notify(['Invalid address'])
-        return False
-
-    # check if user list exists
-    user_info = Get(ctx, USERKEY)
-    if user_info:
-        all_users = Deserialize(user_info)
-    else:
-        Notify(['User list is empty'])
-        return False
-
-    # check if user has been created
-    if address not in all_users:
-        Notify(['User not yet created'])
-        return False
-
-    # if the user has been created, the bank map exists. Check the user's bank
-    else:
-        bank_info = Get(ctx, BANKEY)
-        bank_map = Deserialize(bank_info)
-        bank_balance = bank_map[address]
-        Notify([bank_balance])
-        return bank_balance
-
-
 def view_wallet(address):
     byte_address = Base58ToAddress(address)
 
@@ -655,7 +598,7 @@ def view_wallet(address):
     # if the above checks hold, we can check the user's wallet.
     else:
         params = [byte_address]
-        wallet_balance = RepContract("balanceOf", params)
+        wallet_balance = AesContract("balanceOf", params)
         if wallet_balance == '':
             wallet_balance = 0
         Notify([wallet_balance])
@@ -716,11 +659,7 @@ def create_bet(address, amount_staked, stock_ticker, sign, margin, date, init_pr
         Notify(['User not created'])
         return False
 
-    # if user exists, bank map exists. check bank condition
-    bank_info = Get(ctx, BANKEY)
-    bank_map = Deserialize(bank_info)
-
-    if bank_map[address] < amount_staked:
+    if AesContract('balanceOf', [byte_address]) < amount_staked:
         Notify(['Insufficient funds'])
         return False
 
@@ -789,6 +728,10 @@ def create_bet(address, amount_staked, stock_ticker, sign, margin, date, init_pr
 
         # get current bet number to create bet specific keys for relevant data
         bet = Get(ctx, BETKEY)
+        
+        # update current bet number and put back onchain
+        new_bet = bet + 1
+        Put(ctx, BETKEY, new_bet)
 
         # put data structures onchain
         Put(ctx, concatkey(bet, FM_PREFIX), fm_info)
@@ -848,16 +791,6 @@ def create_bet(address, amount_staked, stock_ticker, sign, margin, date, init_pr
         Put(ctx, concatkey(address, PT_PREFIX), profit_info)
         Notify(['User profit per bet updated'])
 
-        # update current bet number and put back onchain
-        new_bet = bet + 1
-        Put(ctx, BETKEY, new_bet)
-
-        # update bet creator's public bank ledger and actual wallet
-        bank_map[address] -= amount_staked
-        bank_info = Serialize(bank_map)
-        Put(ctx, BANKEY, bank_info)
-        Notify(['bank_map updated'])
-
         subtract_bank(address, amount_staked)
         Notify(['user wallet updated'])
 
@@ -901,10 +834,6 @@ def vote(bet, address, amount_staked, for_against):
         Notify(['Invalid address'])
         return False
 
-    # check if bank is sufficient for staking
-    bank_info = Get(ctx, BANKEY)
-    bank_map = Deserialize(bank_info)
-
     # add bet to list of bets the user has participated in
     bl_info = Get(ctx, concatkey(address, BL_PREFIX))
     if bl_info:
@@ -915,7 +844,7 @@ def vote(bet, address, amount_staked, for_against):
     else:
         bet_list = []
 
-    if bank_map[address] < amount_staked:
+    if AesContract('balanceOf', [byte_address]) < amount_staked:
         Notify(['Insufficient funds'])
         return False
 
@@ -960,7 +889,7 @@ def vote(bet, address, amount_staked, for_against):
                 against_map = {}
                 against_list = []
 
-                against_map[address] = bank_map[address]
+                against_map[address] = amount_staked
                 against_list.append(address)
 
                 am_info = Serialize(against_map)
@@ -988,12 +917,7 @@ def vote(bet, address, amount_staked, for_against):
         val_info = Serialize(val_list)
         Put(ctx, concatkey(bet, VAL_PREFIX), val_info)
 
-        # update wallet and bank ledger, put latter back onchain
-        bank_map[address] -= amount_staked
-        bank_info = Serialize(bank_map)
-        Put(ctx, BANKEY, bank_info)
-        Notify(['bank_map updated'])
-
+        # update wallet
         subtract_bank(address, amount_staked)
         Notify(['user wallet updated'])
 
@@ -1055,9 +979,6 @@ def distribute(bet, result):
     # case in which bet is a draw
     if result == 0:
         Notify(['The bet was a draw'])
-        # if this is an active bet, the bank map exists
-        bank_info = Get(ctx, BANKEY)
-        bank_map = Deserialize(bank_info)
 
         # if this is an active bet, the for map and list must exist
         fm_info = Get(ctx, concatkey(bet, FM_PREFIX))
@@ -1074,7 +995,6 @@ def distribute(bet, result):
 
         # return money to for voters
         for address in for_list:
-            bank_map[address] += for_map[address]
             add_bank(address, for_map[address])
 
             # update participants' track record
@@ -1087,7 +1007,6 @@ def distribute(bet, result):
 
         # return money to against voters
         for address in against_list:
-            bank_map[address] += against_map[address]
             add_bank(address, against_map[address])
 
             # update participants' track record
@@ -1099,13 +1018,6 @@ def distribute(bet, result):
             Put(ctx, concatkey(address, RC_PREFIX), record_info)
 
         # profit for both for and against voters stays 0 for case of a draw
-
-        Notify(['Money has been returned to voters, bank_map and wallet updated'])
-
-        # store bank map
-        bank_info = Serialize(bank_map)
-        Put(ctx, BANKEY, bank_info)
-
         Notify(['Data structures removed, bet incomplete', bet])
 
         return False
@@ -1146,18 +1058,14 @@ def distribute(bet, result):
         lose_stake = val_list[2]
         Notify(['against_map = winners'])
 
-    # get rep and bank info for updating
+    # get rep info for updating
     rep_info = Get(ctx, REPKEY)
     rep_map = Deserialize(rep_info)
 
-    bank_info = Get(ctx, BANKEY)
-    bank_map = Deserialize(bank_info)
-
     for address in winners_list:
-        # distribute and update winners' rep, bank, wallet
+        # distribute and update winners' rep, wallet
         winnings = winners_map[address] + winners_map[address] * lose_stake / win_stake
         rep_map[address] += winners_map[address] * lose_stake / win_stake
-        bank_map[address] += winnings
         add_bank(address, winnings)
 
         # update winners' track record. already initialized in vote/create
@@ -1176,9 +1084,9 @@ def distribute(bet, result):
         profit_info = Serialize(profit_map)
         Put(ctx, concatkey(address, PT_PREFIX), profit_info)
 
-    Notify(['Winner rep, bank, wallet, and record updated'])
+    Notify(['Winner rep, wallet, and record updated'])
 
-    # only need to update losers' rep - bank and wallet updated already during staking
+    # only need to update losers' rep - wallet updated already during staking
     for address in losers_list:
         rep_map[address] -= losers_map[address]
 
@@ -1203,9 +1111,6 @@ def distribute(bet, result):
     # put public data structures back onchain
     rep_info = Serialize(rep_map)
     Put(ctx, REPKEY, rep_info)
-
-    bank_info = Serialize(bank_map)
-    Put(ctx, BANKEY, bank_info)
 
     return True
 
@@ -1265,6 +1170,7 @@ def check_result(bet, current_price):
 
 # carries out distribute function given the current price, uses check_result
 def payout(bet, current_price):
+    assert(CheckWitness(token_owner))
     # check if active bet list is populated/exists
     ab_info = Get(ctx, ABKEY)
     if ab_info:
@@ -1282,7 +1188,7 @@ def payout(bet, current_price):
     if am_info:
         Notify(['There are voters on both sides of the bet'])
         final_result = check_result(bet, current_price)
-        distribute(bet, final_result)
+        # distribute(bet, final_result)
 
         # delete onchain data structures specific to a bet
         Delete(ctx, concatkey(bet, FM_PREFIX))
@@ -1297,9 +1203,6 @@ def payout(bet, current_price):
 
     else:
         Notify(['There are no against voters'])
-        # if this is an active bet, the bank map exists
-        bank_info = Get(ctx, BANKEY)
-        bank_map = Deserialize(bank_info)
 
         # if this is an active bet, the for map and list must exist
         fm_info = Get(ctx, concatkey(bet, FM_PREFIX))
@@ -1310,7 +1213,6 @@ def payout(bet, current_price):
 
         # return money to voters
         for address in for_list:
-            bank_map[address] += for_map[address]
             add_bank(address, for_map[address])
 
             # update participants' track record
@@ -1321,11 +1223,7 @@ def payout(bet, current_price):
             record_info = Serialize(record_map)
             Put(ctx, concatkey(address, RC_PREFIX), record_info)
 
-        Notify(['Money has been returned to voters, bank_map and wallet updated'])
-
-        # store bank map
-        bank_info = Serialize(bank_map)
-        Put(ctx, BANKEY, bank_info)
+        Notify(['Money has been returned to voters, wallet updated'])
 
         # delete used data structures
         Delete(ctx, concatkey(bet, FM_PREFIX))
@@ -1474,7 +1372,7 @@ def active_bets():
     else:
         active_bets = Deserialize(ab_info)
         Notify([active_bets])
-        return True
+        return active_bets
 
 
 def profile(address):
