@@ -417,7 +417,19 @@ def get_bet_voters(betId, for_against):
 
 def get_voter_staked_amount(betId, address, for_against):
     return Get(ctx, concatkey(betId, concatkey(address, concatkey(for_against, VOTE_PREFIX))))
-
+    
+def get_all_voters(betId):
+    options = [True, False]
+    all_voters = []
+    for option in options:
+        bet_voter_list_info = Get(ctx, concatkey(betId, concatkey(option, BET_VOTERS_LIST)))    
+        if bet_voter_list_info:
+            voters = Deserialize(bet_voter_list_info)
+            for voter in voters:
+                all_voters.append(voter)
+    
+    Notify([all_voters])
+    return all_voters
 
 # votes on a side of the bet and immediately updates relevant data structures
 def vote(bet, address, amount_staked, for_against):
