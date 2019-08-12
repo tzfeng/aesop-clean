@@ -9,29 +9,8 @@ from ontology.interop.Ontology.Native import Invoke
 from ontology.libont import bytearray_reverse
 
 # keys and prefixes for data storage onchain
-REPKEY = 'Rep'  # public reputation of all users
-BANKEY = 'Bank'  # bank balances of all users
 BETKEY = 'Bets'  # the current bet key
-USERKEY = 'Users'  # list of all users
-AESKEY = 'AES'  # AES supply key
-ONGKEY = 'ONG'  # ONG supply key
-ABKEY = 'AB'  # active bets
-UNKEY = 'UN'  # usernames
-FM_PREFIX = 'FM'  # for map
-AM_PREFIX = 'AM'  # against map
-FL_PREFIX = 'FL'  # for list
-AL_PREFIX = 'AL'  # against list
-VAL_PREFIX = 'VAL'  # val list for each bet
-ST_PREFIX = 'ST'  # stock_ticker
-BL_PREFIX = 'BL'  # bets a user has participated in
-RC_PREFIX = 'RC'  # user's track record
-PT_PREFIX = 'PT'  # user's profit per bet
-BT_PREFIX = 'BT'  # bet prefix for track record storage
-AB_PREFIX = 'AB'  # bet prefix for active bets
 PI_PREFIX = 'PI'  # profile information
-
-AES_SUPPLY_KEY = "ARK"
-
 
 USER_EXIST_PREFIX = bytearray(b'\x01')
 UN_EXIST_PREFIX = bytearray(b'\x02')
@@ -74,19 +53,19 @@ def Main(operation, args):
         bio = args[2]
         return create_user(address, username, bio)
 
-    if operation == 'purchase_bank':
+    if operation == 'purchase_token':
         if len(args) != 2:
             return False
         address = args[0]
         amount = args[1]
-        return purchase_bank(address, amount)
+        return purchase_token(address, amount)
 
-    if operation == 'redeem_bank':
+    if operation == 'redeem_ong':
         if len(args) != 2:
             return False
         address = args[0]
         amount = args[1]
-        return redeem_bank(address, amount)
+        return redeem_ong(address, amount)
 
     if operation == 'view_rep':
         if len(args) != 1:
@@ -94,17 +73,11 @@ def Main(operation, args):
         address = args[0]
         return view_rep(address)
 
-    if operation == 'view_bank':
+    if operation == 'view_token':
         if len(args) != 1:
             return False
         address = args[0]
-        return view_bank(address)
-
-    if operation == 'view_wallet':
-        if len(args) != 1:
-            return False
-        address = args[0]
-        return view_wallet(address)
+        return view_token(address)
 
     if operation == 'view_ong':
         if len(args) != 1:
@@ -125,6 +98,7 @@ def Main(operation, args):
         init_price = args[6]
         return create_bet(address, amount_staked, stock_ticker, sign, margin, date, init_price)
 
+
     if operation == 'vote':
         if len(args) != 4:
             return False
@@ -134,12 +108,6 @@ def Main(operation, args):
         for_against = args[3]
         return vote(bet, address, amount_staked, for_against)
 
-    if operation == 'check_result':
-        if len(args) != 2:
-            return False
-        bet = args[0]
-        current_price = args[1]
-        return check_result(bet, current_price)
 
     if operation == 'payout':
         if len(args) != 2:
@@ -148,29 +116,6 @@ def Main(operation, args):
         current_price = args[1]
         return payout(bet, current_price)
 
-    if operation == 'bet_info':
-        if len(args) != 1:
-            return False
-        bet = args[0]
-        return bet_info(bet)
-
-    if operation == 'users':
-        return users()
-
-    if operation == 'user_tab':
-        if len(args) != 1:
-            return False
-        address = args[0]
-        return user_tab(address)
-
-    if operation == 'user_record':
-        if len(args) != 1:
-            return False
-        address = args[0]
-        return user_record(address)
-
-    if operation == 'active_bets':
-        return active_bets()
 
     if operation == 'profile':
         if len(args) != 1:
@@ -186,7 +131,7 @@ def init():
     Put(ctx, BETKEY, BETID)
 
     aes_amount = 10000 * AES_FACTOR
-    Put(ctx, AES_SUPPLY_KEY, aes_amount)
+    assert(deposit(token_owner, aes_amount))
 
     ong_amount = 1000 * ONG_FACTOR
     assert (deposit_ong(token_owner, ong_amount))
@@ -198,9 +143,7 @@ def init():
 # method to concatenate prefixes with corresponding keys
 def concatkey(str1, str2):
     return concat(concat(str1, '_'), str2)
-
-
-
+    
 
 def withdraw_ong(address, ong_amount):
     assert (CheckWitness(address))
@@ -210,6 +153,7 @@ def withdraw_ong(address, ong_amount):
     assert (res)
     Notify(["depositONG", address, ong_amount])
     return True
+
 
 def deposit_ong(address, ong_amount):
     assert (CheckWitness(address))
@@ -244,29 +188,21 @@ def deposit(address, amount):
     return True
 
 
-
 def aes_supply():
-    # # Method 1
-    # # Statically invoke contract
-    # return RepContract('balanceOf', [contract_address])
-
-    # # Method 2
-    # Dynamically invoke contract
     aesContractHash = "7f0ac00575b34c1f8a4fd4641f6c58721f668fd4"
     return DynamicAppCall(bytearray_reverse(aesContractHash), "balanceOf", [contract_address])
+
 
 def ong_supply():
     return Invoke(0, contract_address_ONG, 'balanceOf', [contract_address])
 
 
-
-
 def get_address_by_username(username):
     return Get(ctx, concatkey(username, UN_EXIST_PREFIX))
 
+
 def user_exist(address):
     return Get(ctx, concatkey(address, PI_PREFIX))
-
 
 
 # create a user and give 100 free rep. Store corresponding info onchain
@@ -283,7 +219,6 @@ def create_user(address, username, bio):
 
     if len(bio) > 100:
         Notify(['Bio length exceeds 100 characters'])
-
 
     # create profile info list
     profile = [username, bio]
@@ -336,7 +271,13 @@ def redeem_ong(address, token_amount):
 # function to view the rep of a particular user
 def view_rep(address):
     return Get(ctx, concatkey(address, REPKEY_PREFIX))
-
+    
+# view user's token
+def view_token(address):
+    if user_exist(address):
+        return RepContract('balanceOf', state(address))
+    else: 
+        return False
 
 # view user's ong in user tab
 def view_ong(address):
@@ -346,12 +287,8 @@ def view_ong(address):
         return False
 
 
-
-
-
 def check_bet_status(betId):
     """
-
     :param betId:
     :return:
     0 means doesn't exist,
@@ -370,13 +307,13 @@ def check_bet_status(betId):
         return active_res
 
 
-
-
 def get_user_repution(address):
     return Get(ctx, concatkey(address, REPKEY_PREFIX))
 
+
 def get_latest_bet():
     return Get(ctx, BETKEY)
+
 
 def get_bet_details(betId):
     if betId > get_latest_bet():
@@ -385,12 +322,14 @@ def get_bet_details(betId):
     bet_details = Deserialize(bet_details_info)
     return [bet_details["sign"], bet_details["margin"], bet_details["target_price"], bet_details["vote_end_time"], bet_details["stock_ticker"]]
 
+
 def get_vote_end_time(betId):
     if betId > get_latest_bet():
         return 0
     bet_details_info = Get(ctx, concatkey(betId, BET_DETAILS_PREFIX))
     bet_details = Deserialize(bet_details_info)
     return bet_details["vote_end_time"]
+
 
 # change timing to month/date/yr + exceptions
 # creates a bet, storing necessary info onchain and putting the user on the "for" side of the bet
@@ -441,12 +380,14 @@ def create_bet(address, amount_staked, stock_ticker, sign, margin, date, init_pr
 
     return True
 
+
 def get_for_avg_reputation(betId):
     bet_content_info = Get(ctx, concatkey(betId, concatkey(1, BET_CONTENT_PREFIX)))
     if not bet_content_info:
         return False
     bet_content = Deserialize(bet_content_info)
     return bet_content["reputation"] / bet_content["count"]
+
 
 def get_bet_content(betId, for_against):
     assert (for_against == 0 or for_against == 1)
@@ -465,6 +406,7 @@ def get_probability(betId):
     against_amount_staked = res[2]
     return for_amount_staked / (for_amount_staked + against_amount_staked) * 100
 
+
 def get_bet_voters(betId, for_against):
     bet_voter_list_info = Get(ctx, concatkey(betId, concatkey(for_against, BET_VOTERS_LIST)))
     if not bet_voter_list_info:
@@ -472,9 +414,9 @@ def get_bet_voters(betId, for_against):
     else:
         return Deserialize(bet_voter_list_info)
 
+
 def get_voter_staked_amount(betId, address, for_against):
     return Get(ctx, concatkey(betId, concatkey(address, concatkey(for_against, VOTE_PREFIX))))
-
 
 
 # votes on a side of the bet and immediately updates relevant data structures
@@ -511,7 +453,6 @@ def vote(bet, address, amount_staked, for_against):
     return True
 
 
-
 def return_money(bet):
     vote_options = [True, False]
     for vote_option in vote_options:
@@ -525,7 +466,6 @@ def return_money(bet):
 # distributes staked rep based on result of bet
 def distribute(bet, result):
     """
-
     :param bet:
     :param result: 0 means bet_against win, 1 mean bet_for win, 2 means draw,
     :return:
@@ -559,8 +499,6 @@ def distribute(bet, result):
         Put(ctx, concatkey(winner, REPKEY_PREFIX), get_user_repution(winner) + reputation_increasement)
         assert (withdraw(winner, winnings))
 
-
-
     # only need to update losers' rep - bank and wallet updated already during staking
     for loser in losers_list:
         # update the loser's reputation
@@ -574,7 +512,6 @@ def distribute(bet, result):
 # checks the result of the bet's prediction
 def check_result(betId, current_price):
     """
-
     :param bet:
     :param current_price:
     :return: 0 means against wins, 1 means for wins, 2 means a draw, 3 means bet inactive
@@ -598,13 +535,6 @@ def check_result(betId, current_price):
     if sign < 0 and current_price <= target_price:
         return 1
     return 0
-
-
-
-
-
-
-
 
 
 # carries out distribute function given the current price, uses check_result
@@ -632,5 +562,3 @@ def profile(address):
         # profile = [username, bio]
         return profile
     return False
-
-
